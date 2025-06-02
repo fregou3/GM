@@ -1,0 +1,159 @@
+-- Instructions de création des index pour optimiser les API de api-clarins-lot2
+-- Date de création : 30/05/2025
+
+/*
+Ce fichier contient les instructions SQL pour créer des index sur les tables PostgreSQL
+utilisées par l'API api-clarins-lot2. Ces index permettront d'optimiser les performances
+des requêtes et d'améliorer le temps de réponse des endpoints.
+
+Structure des tables principales utilisées par l'API :
+
+CREATE TABLE MARTIP00
+(MAARTI char(15),MADESI char(60),MANAME char(60),MALIGN char(10),MATYPP char(10),MAMARQ char(5),MAFAMI char(15),MAGE13 char(30),MAPARA char(1),MAQTPK numeric(15),MAQTPA numeric(15),MAACTI char(1));
+
+CREATE TABLE CPALEP00
+(CPPALE char(20),CPARTI char(15),CPMFNO numeric(7),CPBANO char(12),CPDATE char(14),CPNOPA numeric(3));
+
+CREATE TABLE CPARAP00
+(CPPARA char(20),CPARTI char(15),CPMFNO numeric(7),CPBANO char(12),CPDATE char(14));
+
+CREATE TABLE CPAPKP00
+(CPPARA char(20),CPPALE char(20),CPARTI char(15), CBANO char(12), CPDATE char(14));
+
+CREATE TABLE CPKUNP00   
+(CPUNIT char(20),CPPARA char(20),CPARTI char(15), CBANO char(12), CPDATE char(14));
+
+CREATE TABLE ACLIEP00
+(ACLVCD char(13),ACLNOM char(35),ACLAD2 char(35),ACLAD1 char(35),ACLPOS char(10),ACLVIL char(35),ACCPAY char(3),ACFACI char(3));
+
+CREATE TABLE FCLIEP00
+(FCCUSF char(15),FCNOMF char(50),FCADRF char(70),FCCODF char(20),FCVILF char(50),FCPAYF char(50),FCSITE char(2));
+
+CREATE TABLE APARAP00
+(ALNCOL char(20),ALNPRE numeric(13),ALARTI char(15),ALLOTI char(15),ALEMBA char(5),ALPARA char(20),ALDATE char(14));
+
+CREATE TABLE AEPREP00
+(AENPRE numeric(13),AEDATP char(14),AELVCD char(13),AEFACI char(3),AENCDE numeric(10),AEDATC char(14));
+
+CREATE TABLE FPARAP00
+(FPPARA char(20),FPCUSF char(15),FPARTI char(15),FPDATE char(14),FPMFNO char(20),FPNCDF char(30),FPSITE char(20),FPEMBA char(20),FPQTEC char(20),FPQPAR char(20),FPERRO char(20),FPINDT char(20), FPINFI char(60), FTAG10 char(10));
+*/
+
+-- Suppression des index existants avant de les recréer
+-- Cela permet d'éviter les erreurs si les index existent déjà mais avec une structure différente
+
+-- 1. Suppression des index pour l'endpoint GET /article/{code}
+DROP INDEX IF EXISTS idx_martip00_mage13;
+
+-- 2. Suppression des index pour l'endpoint GET /tracabilite/unite/{code_para}
+DROP INDEX IF EXISTS idx_aparap00_alpara;
+DROP INDEX IF EXISTS idx_aeprep00_aenpre;
+DROP INDEX IF EXISTS idx_fparap00_fppara;
+DROP INDEX IF EXISTS idx_acliep00_aclvcd;
+DROP INDEX IF EXISTS idx_fcliep00_fccusf;
+
+-- 3. Suppression des index pour l'endpoint GET /palette/{code_para}
+DROP INDEX IF EXISTS idx_cpalep00_cppale;
+
+-- 4. Suppression des index pour l'endpoint GET /prepack/{code_para}
+DROP INDEX IF EXISTS idx_cparap00_cppara;
+DROP INDEX IF EXISTS idx_cpapkp00_cppara;
+DROP INDEX IF EXISTS idx_cpapkp00_join;
+
+-- 5. Suppression des index pour l'endpoint GET /unite/{code_para}
+DROP INDEX IF EXISTS idx_cpkunp00_cppara;
+DROP INDEX IF EXISTS idx_cpkunp00_join;
+
+-- 6. Suppression des index pour l'endpoint GET /batchnumber/{code_unique}
+DROP INDEX IF EXISTS idx_cpkunp00_cpunit;
+DROP INDEX IF EXISTS idx_cparap00_cpbano;
+
+-- 7. Suppression des index composites pour les jointures fréquentes
+DROP INDEX IF EXISTS idx_cpkunp00_cparap00_join;
+DROP INDEX IF EXISTS idx_cpapkp00_cpalep00_join;
+
+-- 8. Suppression des index pour les tris fréquents
+DROP INDEX IF EXISTS idx_aparap00_aldate;
+DROP INDEX IF EXISTS idx_aeprep00_aedatp;
+DROP INDEX IF EXISTS idx_fparap00_fpdate;
+DROP INDEX IF EXISTS idx_cpkunp00_cpdate;
+DROP INDEX IF EXISTS idx_cparap00_cpdate;
+DROP INDEX IF EXISTS idx_cpalep00_cpdate;
+
+-- 1. Index pour l'endpoint GET /article/{code}
+-- Optimise la recherche d'articles par code EAN
+CREATE INDEX IF NOT EXISTS idx_martip00_mage13 ON martip00 (MAGE13);
+
+-- 2. Index pour l'endpoint GET /tracabilite/unite/{code_para}
+-- Optimise la recherche dans les tables de traçabilité
+CREATE INDEX IF NOT EXISTS idx_aparap00_alpara ON aparap00 (ALPARA);
+CREATE INDEX IF NOT EXISTS idx_aeprep00_aenpre ON aeprep00 (AENPRE);
+CREATE INDEX IF NOT EXISTS idx_fparap00_fppara ON fparap00 (FPPARA);
+CREATE INDEX IF NOT EXISTS idx_acliep00_aclvcd ON acliep00 (ACLVCD);
+CREATE INDEX IF NOT EXISTS idx_fcliep00_fccusf ON fcliep00 (FCCUSF);
+
+-- 3. Index pour l'endpoint GET /palette/{code_para}
+-- Optimise la recherche de palettes par code parallèle
+CREATE INDEX IF NOT EXISTS idx_cpalep00_cppale ON cpalep00 (CPPALE);
+
+-- 4. Index pour l'endpoint GET /prepack/{code_para}
+-- Optimise la recherche de prepacks et leurs relations
+CREATE INDEX IF NOT EXISTS idx_cparap00_cppara ON cparap00 (CPPARA);
+CREATE INDEX IF NOT EXISTS idx_cpapkp00_cppara ON cpapkp00 (CPPARA);
+CREATE INDEX IF NOT EXISTS idx_cpapkp00_join ON cpapkp00 (CPPARA, CPPALE);
+
+-- 5. Index pour l'endpoint GET /unite/{code_para}
+-- Optimise la recherche d'unités par code parallèle
+CREATE INDEX IF NOT EXISTS idx_cpkunp00_cppara ON cpkunp00 (CPPARA);
+CREATE INDEX IF NOT EXISTS idx_cpkunp00_join ON cpkunp00 (CPPARA, CPUNIT);
+
+-- 6. Index pour l'endpoint GET /batchnumber/{code_unique}
+-- Optimise la recherche du numéro de lot par code unique
+CREATE INDEX IF NOT EXISTS idx_cpkunp00_cpunit ON cpkunp00 (CPUNIT);
+CREATE INDEX IF NOT EXISTS idx_cparap00_cpbano ON cparap00 (CPBANO);
+
+-- 7. Index composites pour optimiser les jointures fréquentes
+CREATE INDEX IF NOT EXISTS idx_cpkunp00_cparap00_join ON cpkunp00 (CPPARA);
+CREATE INDEX IF NOT EXISTS idx_cpapkp00_cpalep00_join ON cpapkp00 (CPPARA, CPPALE);
+
+-- 8. Index pour optimiser les tris fréquents (par date, etc.)
+CREATE INDEX IF NOT EXISTS idx_aparap00_aldate ON aparap00 (ALDATE);
+CREATE INDEX IF NOT EXISTS idx_aeprep00_aedatp ON aeprep00 (AEDATP);
+CREATE INDEX IF NOT EXISTS idx_fparap00_fpdate ON fparap00 (FPDATE);
+CREATE INDEX IF NOT EXISTS idx_cpkunp00_cpdate ON cpkunp00 (CPDATE);
+CREATE INDEX IF NOT EXISTS idx_cparap00_cpdate ON cparap00 (CPDATE);
+CREATE INDEX IF NOT EXISTS idx_cpalep00_cpdate ON cpalep00 (CPDATE);
+
+-- 9. Instructions pour la maintenance des index
+/*
+Pour maintenir les performances optimales de la base de données, il est recommandé d'exécuter
+régulièrement les commandes suivantes :
+
+1. Analyse des tables pour mettre à jour les statistiques :
+   ANALYZE martip00, cpalep00, cparap00, cpapkp00, cpkunp00, acliep00, fcliep00, aparap00, aeprep00, fparap00;
+
+2. Réindexation des index pour éviter la fragmentation :
+   REINDEX TABLE martip00, cpalep00, cparap00, cpapkp00, cpkunp00, acliep00, fcliep00, aparap00, aeprep00, fparap00;
+
+3. Vérification de l'utilisation des index :
+   SELECT relname, indexrelname, idx_scan, idx_tup_read, idx_tup_fetch
+   FROM pg_stat_all_indexes
+   WHERE schemaname = 'public'
+   ORDER BY relname, indexrelname;
+
+Ces opérations de maintenance devraient être planifiées pendant les périodes de faible activité.
+*/
+
+-- 10. Recommandations supplémentaires
+/*
+1. Considérer l'utilisation d'index partiels si certaines valeurs sont plus fréquemment recherchées.
+   Exemple : CREATE INDEX idx_cparap00_active ON cparap00 (cppara) WHERE active = true;
+
+2. Pour les requêtes qui utilisent souvent LIKE avec un préfixe fixe, envisager des index de type texte :
+   CREATE INDEX idx_article_description_prefix ON martip00 (description text_pattern_ops);
+
+3. Surveiller régulièrement les performances des requêtes avec EXPLAIN ANALYZE pour identifier
+   les requêtes problématiques et ajuster les index en conséquence.
+
+4. Considérer l'utilisation d'index GIN pour les recherches dans des champs JSON si applicable.
+*/

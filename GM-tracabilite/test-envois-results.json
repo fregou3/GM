@@ -1,0 +1,40 @@
+[
+  {
+    "ID 10 N": "110308745607625295",
+    "BATCH NUMBER": "110DA87",
+    "tracabilite": [
+      {
+        "type_envoi": "envoi_filiale",
+        "code_parallele": "9500470110",
+        "article": "80103084",
+        "emballage": "PA",
+        "date_envoi": "20240720",
+        "nom_envoi": "CDFI SHANGHAI",
+        "addresse_envoi": "CHINA DUTY FREE INT'L LIMITED",
+        "cp_envoi": null,
+        "ville_envoi": "WANCHAI",
+        "pays_envoi": "HONG KONG",
+        "code_client": null
+      }
+    ]
+  },
+  {
+    "ID 10 N": "110308439283988170",
+    "BATCH NUMBER": "110DA84",
+    "tracabilite": [
+      {
+        "type_envoi": "envoi_filiale",
+        "code_parallele": "9500470110",
+        "article": "80103084",
+        "emballage": "PA",
+        "date_envoi": "20240720",
+        "nom_envoi": "CDFI SHANGHAI",
+        "addresse_envoi": "CHINA DUTY FREE INT'L LIMITED",
+        "cp_envoi": null,
+        "ville_envoi": "WANCHAI",
+        "pays_envoi": "HONG KONG",
+        "code_client": null
+      }
+    ]
+  }
+]

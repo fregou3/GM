@@ -1,0 +1,171 @@
+-- Requêtes PostgreSQL pour détecter les anomalies dans les données de scan de produits
+
+-- 1. Identifier les identifiants dupliqués et leur nombre d'occurrences
+SELECT identifier, COUNT(*) as nombre_occurrences
+FROM scan_final_31052025
+GROUP BY identifier
+HAVING COUNT(*) > 1
+ORDER BY nombre_occurrences DESC
+LIMIT 20;
+
+-- 2. Identifier les id_10_n dupliqués et leur nombre d'occurrences
+SELECT "id_10_n", COUNT(*) as nombre_occurrences
+FROM scan_final_31052025
+
+GROUP BY "id_10_n"
+HAVING COUNT(*) > 1
+ORDER BY nombre_occurrences DESC
+LIMIT 20;
+
+-- 3. Vérifier la cohérence des informations produit pour les identifiants dupliqués
+WITH doublons AS (
+    SELECT identifier
+    FROM scan_final_31052025
+
+    GROUP BY identifier
+    HAVING COUNT(*) > 1
+)
+SELECT 
+    sp.identifier,
+    COUNT(DISTINCT sp."ref_m3") as nombre_ref_m3,
+    COUNT(DISTINCT sp."REF CLAIR") as nombre_ref_clair,
+    COUNT(DISTINCT sp.code) as nombre_codes,
+    COUNT(*) as nombre_occurrences
+FROM scan_final_31052025
+ sp
+JOIN doublons d ON sp.identifier = d.identifier
+GROUP BY sp.identifier
+HAVING 
+    COUNT(DISTINCT sp."ref_m3") > 1 OR 
+    COUNT(DISTINCT sp."REF CLAIR") > 1 OR 
+    COUNT(DISTINCT sp.code) > 1
+ORDER BY nombre_occurrences DESC;
+
+-- 4. Vérifier si un même identifiant est envoyé vers plusieurs destinations
+WITH doublons AS (
+    SELECT identifier
+    FROM scan_final_31052025
+
+    GROUP BY identifier
+    HAVING COUNT(*) > 1
+)
+SELECT 
+    sp.identifier,
+    COUNT(DISTINCT sp.pays_envoi) as nombre_pays,
+    COUNT(DISTINCT sp.ville_envoi) as nombre_villes,
+    array_agg(DISTINCT sp.pays_envoi) as liste_pays,
+    COUNT(*) as nombre_occurrences
+FROM scan_final_31052025
+ sp
+JOIN doublons d ON sp.identifier = d.identifier
+GROUP BY sp.identifier
+HAVING COUNT(DISTINCT sp.pays_envoi) > 1
+ORDER BY nombre_occurrences DESC;
+
+-- 5. Analyser les scans multiples dans une même journée (potentiellement anormal)
+WITH scans_par_jour AS (
+    SELECT 
+        identifier,
+        "date_scan",
+        COUNT(*) as nombre_scans_jour
+    FROM scan_final_31052025
+
+    GROUP BY identifier, "date_scan"
+    HAVING COUNT(*) > 10  -- Seuil arbitraire à ajuster selon les besoins
+)
+SELECT 
+    spj.identifier,
+    spj."date_scan",
+    spj.nombre_scans_jour,
+    sp."ref_m3",
+    sp."ref_clair"
+FROM scans_par_jour spj
+JOIN scan_final_31052025
+ sp ON spj.identifier = sp.identifier AND spj."date_scan" = sp."date_scan"
+GROUP BY spj.identifier, spj."date_scan", spj.nombre_scans_jour, sp."ref_m3", sp."ref_clair"
+ORDER BY spj.nombre_scans_jour DESC
+LIMIT 20;
+
+-- 6. Identifier les scans avec des informations manquantes importantes
+SELECT 
+    identifier,
+    "id_10_n",
+    "ref_m3",
+    "date_scan"
+FROM scan_final_31052025
+
+WHERE 
+    "site_scan_log" IS NULL OR
+    city IS NULL OR
+    country IS NULL OR
+    nom_envoi IS NULL
+LIMIT 100;
+
+-- 7. Analyser la distribution temporelle des scans pour détecter des patterns anormaux
+WITH scans_par_heure AS (
+    SELECT
+        identifier,
+        date_scan,
+        EXTRACT(HOUR FROM CAST(SPLIT_PART(heure_scan__gmt_, ' ', 1) AS TIME)) as heure,
+        COUNT(*) as nombre_scans
+    FROM scan_final_31052025
+    GROUP BY
+        identifier,
+        date_scan,
+        EXTRACT(HOUR FROM CAST(SPLIT_PART(heure_scan__gmt_, ' ', 1) AS TIME))
+    HAVING COUNT(*) > 5
+)
+SELECT
+    identifier,
+    date_scan,
+    heure,
+    nombre_scans
+FROM scans_par_heure
+ORDER BY nombre_scans DESC
+LIMIT 50;
+
+-- 8. Vérifier si un même identifiant est scanné depuis plusieurs pays différents
+-- (ce qui pourrait indiquer une duplication ou une réutilisation d'identifiant)
+SELECT 
+    identifier,
+    COUNT(DISTINCT country) as nombre_pays,
+    array_agg(DISTINCT country) as liste_pays,
+    COUNT(*) as nombre_scans
+FROM scan_final_31052025
+
+GROUP BY identifier
+HAVING COUNT(DISTINCT country) > 1
+ORDER BY nombre_pays DESC, nombre_scans DESC
+LIMIT 50;
+
+-- 9. Identifier les identifiants qui ont des valeurs incohérentes entre "identifier" et "id_10_n"
+WITH relation_id AS (
+    SELECT 
+        identifier,
+        "id_10_n",
+        COUNT(*) as occurrences
+    FROM scan_final_31052025
+
+    GROUP BY identifier, "id_10_n"
+)
+SELECT 
+    identifier,
+    COUNT(DISTINCT "id_10_n") as nombre_id_10_n,
+    array_agg(DISTINCT "id_10_n") as liste_id_10_n
+FROM relation_id
+GROUP BY identifier
+HAVING COUNT(DISTINCT "id_10_n") > 1
+ORDER BY nombre_id_10_n DESC;
+
+-- 10. Analyser les scans multiples par type d'envoi pour un même identifiant
+SELECT 
+    identifier,
+    COUNT(DISTINCT type_envoi) as nombre_types_envoi,
+    array_agg(DISTINCT type_envoi) as types_envoi,
+    COUNT(*) as nombre_scans
+FROM scan_final_31052025
+
+GROUP BY identifier
+HAVING COUNT(DISTINCT type_envoi) > 1
+ORDER BY nombre_scans DESC
+LIMIT 50;

@@ -1,0 +1,87 @@
+Analyse du contenu du dossier "GM-tracabilite-main (1)" et détail du fonctionnement du programme.
+
+Le programme est une application web Streamlit conçue pour enrichir les données de scan de codes QR avec des informations de traçabilité.
+
+**Résumé du fonctionnement du programme :**
+
+1.  **Interface Utilisateur (Streamlit - `streamlit_app.py`) :**
+    *   L'utilisateur télécharge un fichier CSV contenant les données de scan des codes QR. Ce fichier doit inclure les colonnes 'ID 10 N' et 'id'.
+    *   L'application affiche les données téléchargées.
+    *   Lorsque l'utilisateur clique sur "Analyser la traçabilité", le script `streamlit_app.py` :
+        *   Enregistre les données téléchargées dans un fichier CSV d'entrée temporaire (par exemple, `scan-AAAAMMJJHHMMSS.csv`).
+        *   Génère un nom de fichier CSV de sortie (par exemple, `tracabilite-AAAAMMJJHHMMSS.csv`).
+        *   Lance un processus en arrière-plan en exécutant le script `tracabilite.py` via `pdm run python tracabilite.py` avec les fichiers d'entrée, de sortie et un fichier journal (`logs.csv`) comme arguments.
+    *   L'interface utilisateur surveille ensuite `logs.csv` pour afficher la progression de la tâche en arrière-plan.
+    *   Une fois que la tâche est marquée comme terminée à 100% dans `logs.csv`, un message de succès s'affiche avec le chemin S3 du fichier de sortie.
+    *   Un bouton permet d'arrêter une tâche en cours (en tuant l'ID de processus trouvé dans `logs.csv`).
+    *   Il nettoie les fichiers CSV d'entrée/sortie temporaires après la fin d'une tâche ou si une nouvelle tâche est démarrée.
+
+2.  **Traitement des Données (Script Python - `tracabilite.py`) :**
+    *   Ce script est exécuté comme un outil en ligne de commande.
+    *   Il lit le fichier CSV d'entrée (contenant 'ID 10 N').
+    *   Pour chaque 'ID 10 N' dans le fichier d'entrée :
+        *   Il interroge une API externe (spécifiée par la variable d'environnement `API_CLARINS_LOT2_ENDPOINT`, authentifiée avec `API_CLARINS_LOT2_TOKEN`) pour récupérer les données de traçabilité.
+        *   Il traite la réponse JSON de l'API. La réponse peut contenir plusieurs "envois" pour un seul 'ID 10 N'.
+        *   Il structure les données, combinant les informations de scan avec les détails de traçabilité (type_envoi, code_parallele, emballage, date_envoi, adresse_envoi, etc.).
+        *   **Important :** Pour chaque ligne du fichier de scan d'entrée, il crée un DataFrame des résultats et l'écrit dans le fichier CSV de sortie. S'il y a plusieurs "envois" pour un seul "ID 10 N" scanné, il semble que `output_file` soit écrasé à chaque itération de la boucle des "envois" dans `process_scans`, puis à nouveau pour chaque nouvelle ligne dans `scans_df`. Cela signifie que le fichier CSV final pour un 'ID 10 N' donné pourrait ne refléter que le dernier "envoi" s'il y en a plusieurs, ou si `from_dict` crée plusieurs lignes, alors le fichier serait écrasé pour chaque ligne de scan principale. Le code `res_df = pd.DataFrame.from_dict(res_dic)` et `res_df.to_csv(output_file, columns=csv_columns, index=False)` à l'intérieur de la boucle `scans_df.iterrows()` suggère fortement que le CSV de sortie est réécrit pour chaque *ligne de scan*. L'intention était peut-être d'ajouter les données, mais l'implémentation actuelle écrase le fichier.
+        *   Le script enregistre sa progression (pourcentage, message, PID, nom du fichier de sortie) dans le fichier journal spécifié (par exemple, `logs.csv`).
+        *   Le fichier CSV de sortie est téléversé vers un compartiment AWS S3 (`ptc-phd-s3/gm-tracabilite/NOM_DU_FICHIER`) périodiquement (toutes les 10 numérisations traitées) et une fois à la toute fin du traitement.
+
+3.  **Dépendances et Configuration :**
+    *   Le projet utilise PDM pour la gestion des dépendances (`pyproject.toml`, `pdm.lock`).
+    *   Il s'appuie sur des variables d'environnement (chargées via `python-dotenv`) pour les informations sensibles telles que les clés API, les informations d'identification S3, et potentiellement les détails de connexion à la base de données (bien que le PostgreSQL mentionné dans le README ne soit pas directement utilisé dans `tracabilite.py` ou `streamlit_app.py` ; l'API est la source des données de traçabilité). Le README mentionne PostgreSQL, mais le code Python interagit avec une API JSON pour les données de traçabilité.
+
+**Problèmes Potentiels / Clarifications :**
+
+*   **Écrasement du CSV de sortie :** Comme indiqué, `tracabilite.py` semble écraser le fichier CSV de sortie à chaque itération principale du traitement des lignes du fichier de scan d'entrée. Si l'intention est d'accumuler tous les résultats de tous les scans dans un seul CSV, c'est un bug. La fonction `append_row_to_csv` non utilisée suggère qu'un mécanisme d'ajout aurait pu être initialement prévu.
+*   **Structure des données de l'API :** La structure exacte de la réponse JSON de `API_CLARINS_LOT2_ENDPOINT` est déduite de la manière dont `res_dic` est rempli.
+*   **Gestion des erreurs :** Une gestion basique des erreurs est présente (par exemple, vérification du statut 200 de la réponse de l'API), mais une gestion des erreurs plus robuste pour les problèmes de réseau, les erreurs d'API ou les formats de données inattendus pourrait être bénéfique.
+*   **Mention de PostgreSQL :** Le README mentionne PostgreSQL (GMDATA) comme source des informations de traçabilité, mais le script `tracabilite.py` utilise une API HTTP (`API_CLARINS_LOT2_ENDPOINT`). Cette API pourrait être un intermédiaire qui récupère les données de la base de données PostgreSQL, ou la documentation pourrait être légèrement obsolète ou faire référence à un système plus large.
+
+**Contenu des fichiers analysés du dossier c:\App\Void\QRcode_Lot2\QRcode_Lot2_1.0\GM-tracabilite-main (1)\GM-tracabilite-main\ :**
+
+**README.md:**
+Fournit une description générale de l'application, les prérequis (Python 3.12, accès PostgreSQL, accès S3), les instructions d'installation (`pip install -r requirements.txt`), la configuration des variables d'environnement (pour la base de données et AWS) et comment lancer l'application (`streamlit run streamlit_app.py`). Il indique que l'application complète les données de scan de codes QR avec des informations de traçabilité depuis une base PostgreSQL (GMDATA) et enregistre les résultats dans un fichier CSV uploadé sur AWS S3.
+
+**streamlit_app.py:**
+Définit l'interface utilisateur avec Streamlit.
+Fonctionnalités :
+-   Téléchargement de fichiers CSV de scans (doivent contenir les colonnes 'ID 10 N' et 'id').
+-   Validation des colonnes du fichier d'entrée.
+-   Affichage des données du fichier téléchargé.
+-   Lancement en arrière-plan du script `tracabilite.py` (via `pdm run python tracabilite.py`) pour l'analyse. Les noms des fichiers d'entrée et de sortie temporaires sont générés avec un horodatage. Un fichier `logs.csv` est utilisé pour le suivi.
+-   Affichage de la progression et du statut de la tâche en arrière-plan en lisant `logs.csv`. Rafraîchissement automatique toutes les 5 secondes.
+-   Affichage d'un message de succès avec le lien S3 du fichier de résultats lorsque la tâche est terminée.
+-   Permet d'arrêter la tâche en cours (via `os.kill` en utilisant le PID stocké dans `logs.csv`).
+-   Nettoyage des fichiers CSV temporaires (commençant par "tracabilite-" ou "scan-") et du fichier `logs.csv`.
+
+**tracabilite.py:**
+Script principal pour le traitement de la traçabilité.
+Fonctionnalités :
+-   Prend en arguments les chemins des fichiers d'entrée, de sortie et de log via `argparse`.
+-   Charge les variables d'environnement (clés AWS, endpoint et token de l'API Clarins Lot2).
+-   Initialise un client S3 (boto3).
+-   Fonction `get_tracabilite(code_unite)` : Interroge une API (`API_CLARINS_LOT2_ENDPOINT`) pour obtenir les données de traçabilité pour un `code_unite` (qui est 'ID 10 N'). Nécessite un token d'autorisation.
+-   Fonction `save_s3(output_file)` : Téléverse le fichier de sortie vers S3 (`ptc-phd-s3/gm-tracabilite/NOM_DU_FICHIER`).
+-   Fonction `process_scans(scans_df, output_file, progress_callback)` :
+    -   Itère sur chaque ligne du DataFrame `scans_df` (provenant du fichier CSV d'entrée).
+    -   Appelle `get_tracabilite()` pour chaque 'ID 10 N'.
+    -   Construit un dictionnaire `res_dic` avec les informations de traçabilité. Si plusieurs "envois" sont retournés par l'API, ils sont traités.
+    -   Si des informations de localisation sont présentes dans les données de l'API, elles sont ajoutées. Sinon, des valeurs `None` sont insérées.
+    -   **Important :** Convertit `res_dic` en DataFrame Pandas et l'écrit dans `output_file` à chaque itération de la boucle principale des scans. Cela signifie que le fichier est écrasé à chaque nouvelle ligne de scan traitée.
+    -   Appelle `progress_callback` pour enregistrer la progression.
+    -   Téléverse le fichier de sortie sur S3 tous les 10 scans traités.
+-   Fonctions `update_progress` et `append_row_to_csv` (avec `csv_lock` et `counter_lock`) : Semblent destinées à une écriture CSV ligne par ligne et un suivi de progression plus fin (potentiellement pour du multithreading), mais `append_row_to_csv` n'est pas utilisée dans `process_scans`.
+-   Bloc principal (`if __name__ == "__main__":`) :
+    -   Parse les arguments.
+    -   Définit `progress_callback` qui écrit le PID, le pourcentage, le message et le nom du fichier de sortie dans le fichier log.
+    -   Lit le CSV d'entrée. Valide la présence des colonnes 'ID 10 N' et 'id'.
+    -   Nettoie et initialise le fichier log avec un en-tête.
+    -   Appelle `process_scans`.
+    -   Enregistre la complétion à 100%.
+    -   Appelle `save_s3` une dernière fois.
+
+**Autres fichiers:**
+-   `.gitignore`: Spécifie les fichiers ignorés par Git.
+-   `pdm.lock`: Fichier de verrouillage des dépendances pour PDM.
+-   `pyproject.toml`: Fichier de configuration du projet Python, incluant les dépendances pour PDM.

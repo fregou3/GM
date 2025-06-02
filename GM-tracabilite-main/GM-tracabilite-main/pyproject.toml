@@ -1,0 +1,15 @@
+[project]
+name = "GM-tracabilite"
+version = "0.1.0"
+authors = [
+    {name = "K. Ollivier", email = "kollivier@cbtw.tech"},
+]
+dependencies = ["pandas>=2.2.3", "python-dotenv>=1.0.1", "boto3>=1.37.12", "streamlit>=1.43.2", "requests>=2.32.3", "argparse>=1.4.0", "streamlit-autorefresh>=1.0.1"]
+requires-python = "==3.12.*"
+readme = "README.md"
+
+[tool.pdm]
+distribution = false
+
+[tool.pdm.scripts]
+start = "streamlit run streamlit_app.py" 

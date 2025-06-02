@@ -1,0 +1,38 @@
+[
+  {
+    "ID 10 N": "110308745607625295",
+    "tracabilite": [
+      {
+        "type_envoi": "Envoi Filiale",
+        "code_parallele": "9500470560",
+        "emballage": "PA",
+        "date_envoi": "20240720",
+        "nom_envoi": "DUBAI DUTY FREE",
+        "addresse_envoi": "DUBAI DUTY FREE OPERATION",
+        "cp_envoi": "PO BOX 125",
+        "ville_envoi": "DUBAI",
+        "pays_envoi": "EMIRATS ARABES UNIS",
+        "code_client": "DDF125",
+        "code_site": "DXB01"
+      }
+    ]
+  },
+  {
+    "ID 10 N": "110308439283988170",
+    "tracabilite": [
+      {
+        "type_envoi": "Envoi Filiale",
+        "code_parallele": "9500470928",
+        "emballage": "PA",
+        "date_envoi": "20240720",
+        "nom_envoi": "BLOOMINGDALE'S",
+        "addresse_envoi": "1000 THIRD AVENUE",
+        "cp_envoi": "10022",
+        "ville_envoi": "NEW YORK",
+        "pays_envoi": "ETATS-UNIS",
+        "code_client": "BL1000",
+        "code_site": "NYC01"
+      }
+    ]
+  }
+]

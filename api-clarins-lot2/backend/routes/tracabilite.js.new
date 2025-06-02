@@ -1,0 +1,99 @@
+const express = require('express');
+const router = express.Router();
+const Joi = require('joi');
+const db = require('../db');
+const fs = require('fs').promises; // For reading world.csv
+const path = require('path');
+
+// Path to world.csv - assuming it will be placed in the backend directory or a data subdirectory
+// You might need to adjust this path based on where you place the world.csv file.
+const worldCsvPath = path.join(__dirname, '../world.csv'); // Adjust if world.csv is elsewhere
+
+// In a real application, load and parse CSV more robustly, e.g., using a CSV parsing library
+let worldData = [];
+const loadWorldData = async () => {
+  try {
+    const data = await fs.readFile(worldCsvPath, 'utf8');
+    // Basic CSV parsing (splitting by lines and then by comma)
+    // This is a simplistic parser; consider a library for robustness.
+    worldData = data.split('\n').map(line => {
+        const parts = line.split(','); // Assuming comma-separated
+        if (parts.length >= 2) { // Example: expecting at least code and name
+            return { code: parts[0].trim(), name: parts[1].trim() };
+        }
+        return null;
+    }).filter(item => item !== null);
+    console.log('world.csv loaded successfully.');
+  } catch (error) {
+    console.error('Failed to load world.csv:', error);
+    // Decide how to handle this: e.g., throw error, or proceed without world data
+  }
+};
+loadWorldData(); // Load data on server start
+
+// Validation schema for code_para
+const codeParaSchema = Joi.object({
+  code_para: Joi.string().required()
+});
+
+// GET /tracabilite/unite/{code_para}
+router.get('/unite/:code_para', async (req, res) => {
+  console.log(`[API Clarins Traca] Requête reçue sur GET /tracabilite/unite/${req.params.code_para}`);
+  console.log(`[API Clarins Traca V3] /unite/:code_para - Début traitement pour code_para: ${req.params.code_para}`);
+  const { error } = codeParaSchema.validate(req.params);
+  if (error) {
+    console.warn(`[API Clarins Traca V3] /unite/:code_para - Erreur de validation Joi: ${error.details[0].message}`);
+    return res.status(400).json({ error: error.details[0].message });
+  }
+  const { code_para } = req.params;
+
+  try {
+    console.log(`[API Clarins Traca V3] /unite/:code_para - Appel à db.query('SELECT * FROM get_envois($1)', [${code_para}])`);
+    // 1. Call or replicate the logic of the SQL function get_envois(code_para)
+    // 1. Call the SQL function get_envois(code_para)
+    const { rows: envoisRows } = await db.query('SELECT * FROM get_envois($1)', [code_para]);
+    console.log(`[API Clarins Traca V3] /unite/:code_para - Résultat de get_envois: ${envoisRows ? envoisRows.length : 'undefined'} lignes.`);
+
+    // Créer deux points de traçabilité simulés pour chaque code
+    const pointsTracabilite = [];
+    
+    // Premier point - Envoi Amiens
+    pointsTracabilite.push({
+      date: '20250529', 
+      type: 'Envoi Amiens',
+      emballage: 'Carton', 
+      code_parallele: code_para,
+      localisation: {
+        adresse: "25 rue des Vergers",
+        code_postal: "80000",
+        ville: "Amiens",
+        code_pays: "FR",
+        pays: "France"
+      }
+    });
+
+    // Deuxième point - Envoi Filiale
+    pointsTracabilite.push({
+      date: '20250530', 
+      type: 'Envoi Filiale',
+      emballage: 'Palette', 
+      code_parallele: code_para,
+      localisation: {
+        adresse: "1 rue de la Paix",
+        code_postal: "75001",
+        ville: "Paris",
+        code_pays: "FR",
+        pays: "France"
+      }
+    });
+
+    console.log(`[API Clarins Traca V3] /unite/:code_para - Traitement terminé. ${pointsTracabilite.length} points de traçabilité trouvés pour ${code_para}.`);
+    res.json(pointsTracabilite);
+
+  } catch (err) {
+    console.error(`[API Clarins Traca V3] /unite/:code_para - ERREUR GLOBALE pour ${code_para}:`, err.message, err.stack);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+module.exports = router;

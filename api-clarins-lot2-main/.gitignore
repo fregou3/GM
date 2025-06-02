@@ -1,0 +1,6 @@
+.pdm-python
+.env
+.venv
+.vscode
+__pycache__
+src/*/__pycache__

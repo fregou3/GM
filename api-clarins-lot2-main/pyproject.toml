@@ -1,0 +1,18 @@
+[project]
+name = "api-clarins-lot2"
+version = "0.1.0"
+description = "Api d'exploration du Lot2 Clarins"
+authors = [
+    {name = "K. Ollivier", email = "kollivier@cbtw.tech"},
+]
+
+dependencies = ["fastapi[standard]>=0.115.11", "pydantic>=2.10.6", "psycopg2-binary>=2.9.10", "pandas>=2.2.3", "uvicorn>=0.34.0"]
+requires-python = "==3.12.*"
+readme = "README.md"
+
+[tool.pdm.scripts]
+start = {cmd = "fastapi dev src/main.py", env = {"PYTHONPATH" = "src"}}
+start_prod = {cmd = "uvicorn src.main:app --host 0.0.0.0 --port 80", env = {"PYTHONPATH" = "src"}} 
+
+[tool.pdm]
+distribution = false

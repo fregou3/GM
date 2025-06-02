@@ -1,0 +1,11 @@
+pid,%,message,filename
+33980,0,"Analyse scan 1/13","C:\App\QRcode_Lot2\QRcode_Lot2_1.1\GM-tracabilite\resultat_python_nouveau2.csv"
+33980,7,"Analyse scan 2/13","C:\App\QRcode_Lot2\QRcode_Lot2_1.1\GM-tracabilite\resultat_python_nouveau2.csv"
+33980,15,"Analyse scan 3/13","C:\App\QRcode_Lot2\QRcode_Lot2_1.1\GM-tracabilite\resultat_python_nouveau2.csv"
+33980,23,"Analyse scan 4/13","C:\App\QRcode_Lot2\QRcode_Lot2_1.1\GM-tracabilite\resultat_python_nouveau2.csv"
+33980,30,"Analyse scan 5/13","C:\App\QRcode_Lot2\QRcode_Lot2_1.1\GM-tracabilite\resultat_python_nouveau2.csv"
+33980,38,"Analyse scan 6/13","C:\App\QRcode_Lot2\QRcode_Lot2_1.1\GM-tracabilite\resultat_python_nouveau2.csv"
+33980,46,"Analyse scan 7/13","C:\App\QRcode_Lot2\QRcode_Lot2_1.1\GM-tracabilite\resultat_python_nouveau2.csv"
+33980,53,"Analyse scan 8/13","C:\App\QRcode_Lot2\QRcode_Lot2_1.1\GM-tracabilite\resultat_python_nouveau2.csv"
+33980,61,"Analyse scan 9/13","C:\App\QRcode_Lot2\QRcode_Lot2_1.1\GM-tracabilite\resultat_python_nouveau2.csv"
+33980,69,"Analyse scan 10/13","C:\App\QRcode_Lot2\QRcode_Lot2_1.1\GM-tracabilite\resultat_python_nouveau2.csv"

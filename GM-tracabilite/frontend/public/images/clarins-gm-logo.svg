@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200px" height="50px" viewBox="0 0 200 50" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>GM-Tracabilité Logo</title>
+    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <rect fill="#FFFFFF" x="0" y="0" width="200" height="50"></rect>
+        <path d="M20,10 L30,10 C35.5228475,10 40,14.4771525 40,20 L40,30 C40,35.5228475 35.5228475,40 30,40 L20,40 C14.4771525,40 10,35.5228475 10,30 L10,20 C10,14.4771525 14.4771525,10 20,10 Z" fill="#E31C2D"></path>
+        <text font-family="Helvetica Neue, Arial, sans-serif" font-size="24" font-weight="500" letter-spacing="1" fill="#E31C2D">
+            <tspan x="50" y="32">GM-TRACA</tspan>
+        </text>
+    </g>
+</svg>

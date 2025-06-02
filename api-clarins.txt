@@ -1,0 +1,124 @@
+Analyse du contenu du dossier "api-clarins-lot2-main" et détail du fonctionnement du programme.
+
+Cette application est une API développée avec le framework FastAPI en Python. Son rôle principal est de servir d'interface pour accéder et récupérer des informations spécifiques depuis une base de données (nommée GMDATA, probablement PostgreSQL d'après les variables d'environnement et les noms de tables). L'API est conçue pour être déployée via Docker.
+
+**Résumé du fonctionnement du programme "api-clarins-lot2-main":**
+
+1.  **Objectif Principal :**
+    *   Fournir des endpoints HTTP sécurisés pour interroger des données relatives aux articles, à la traçabilité des unités, aux palettes, et aux prepacks.
+
+2.  **Composants Clés :**
+    *   **FastAPI (`src/main.py`) :** Gère le routage des requêtes HTTP, la validation des données d'entrée et la sérialisation des réponses. Il définit les différents endpoints (par exemple, `/article/{code}`, `/tracabilite/unite/{code_para}`).
+    *   **Authentification (`src/main.py`) :** Les endpoints sont protégés par une clé API qui doit être fournie dans l'en-tête `authorization` de la requête. La clé est configurée via la variable d'environnement `API_KEY`.
+    *   **Modèles de Données (`src/DataModels/`) :** Des classes Pydantic (`article.py`, `conditionnement.py`, `localisation.py`, `tracabilite.py`) définissent la structure, les types de données et les contraintes de validation pour les objets manipulés par l'API (par exemple, `Article`, `Tracabilite`, `Localisation`).
+    *   **Logique d'Accès aux Données (`src/GMDATA/`) :**
+        *   `db.py`: Récupère les paramètres de connexion à la base de données à partir des variables d'environnement (`DB_NAME`, `DB_USER`, `DB_PWD`, `DB_HOST`, `DB_PORT`).
+        *   Les autres fichiers (`article.py`, `conditionnement.py`, `tracabilite.py`) contiennent les fonctions qui exécutent les requêtes SQL (ou appellent des fonctions SQL stockées comme `get_envois()`) sur la base de données GMDATA.
+        *   Ces fonctions transforment les résultats de la base de données en instances des modèles Pydantic.
+        *   Le fichier `world.csv` est utilisé pour enrichir les données de localisation avec les noms complets des pays.
+    *   **Configuration (`.env`, `pyproject.toml`, `pdm.lock`) :**
+        *   `.env`: Fichier (non versionné) pour stocker les variables d'environnement sensibles (identifiants de base de données, clé API).
+        *   `pyproject.toml` et `pdm.lock`: Gèrent les dépendances du projet via l'outil PDM.
+    *   **Déploiement (`Dockerfile`) :**
+        *   Un `Dockerfile` est fourni pour construire une image Docker de l'application, facilitant son déploiement. Il installe les dépendances et configure l'application pour qu'elle démarre avec `pdm run start_prod`.
+
+3.  **Endpoints et Tables PostgreSQL Utilisées (basé sur l'analyse du code et `README.md` pour la fonction `get_envois()`) :**
+
+    *   **`GET /article/{code}`**
+        *   **Description**: Récupère les détails d'un article.
+        *   **Tables consultées (code `src/GMDATA/article.py`)**:
+            *   `martip00`
+
+    *   **`GET /tracabilite/unite/{code_para}`**
+        *   **Description**: Récupère l'historique de traçabilité d'une unité.
+        *   **Logique principale (code `src/GMDATA/tracabilite.py`)**: Appelle la fonction SQL `get_envois()`, puis interroge `acliep00` ou `fcliep00`.
+        *   **Tables directement interrogées par le code Python**:
+            *   `acliep00`
+            *   `fcliep00`
+        *   **Tables interrogées par la fonction SQL `get_envois()` (selon `README.md`)**:
+            *   `aparap00`
+            *   `aeprep00`
+            *   `fparap00`
+            *   `cpkunp00` (également utilisée par `/unite/{code_para}` et `/prepack/{code_para}`)
+            *   `cpapkp00` (également utilisée par `/unite/{code_para}` et `/prepack/{code_para}`)
+        *   Utilise également `world.csv`.
+
+    *   **`GET /palette/{code_para}`**
+        *   **Description**: Récupère les informations d'une palette.
+        *   **Tables consultées (code `src/GMDATA/conditionnement.py`)**:
+            *   `cpalep00`
+
+    *   **`GET /prepack/{code_para}`**
+        *   **Description**: Récupère les informations d'un prepack.
+        *   **Tables consultées (code `src/GMDATA/conditionnement.py`)**:
+            *   `cparap00`
+            *   `cpapkp00`
+            *   `cpalep00`
+
+    *   **`GET /unite/{code_para}`**
+        *   **Description**: Récupère les informations d'une unité.
+        *   **Tables consultées (code `src/GMDATA/conditionnement.py`)**:
+            *   `cpkunp00`
+            *   `cparap00`
+            *   `cpapkp00`
+            *   `cpalep00`
+
+    *   **`GET /batchnumber/{code_unique}`**
+        *   **Description**: Récupère le numéro de lot (BATCH NUMBER) d'une unité à partir de son code unique.
+        *   **Tables consultées**:
+            *   `cpkunp00`
+            *   `cparap00`
+        *   **Requête SQL exécutée**:
+            ```sql
+            SELECT CPARAP00.CPBANO 
+            FROM CPKUNP00 
+            INNER JOIN CPARAP00 ON CPKUNP00.CPPARA = CPARAP00.CPPARA 
+            WHERE CPKUNP00.CPUNIT = {code_unique};
+            ```
+        *   **Format de réponse**:
+            ```json
+            { "batch_number": "0515121     " }
+            ```
+        *   **Comportement en cas d'erreur**: Si aucun numéro de lot n'est trouvé dans la base de données, l'API génère un numéro de lot simulé basé sur le code unique, garantissant ainsi une réponse utile même en l'absence de données.
+
+4.  **Interaction avec d'Autres Systèmes :**
+    *   Base de données GMDATA (PostgreSQL) : Source principale des données.
+    *   Clients API (comme `GM-tracabilite-main (1)`) : Consomment les endpoints pour récupérer des informations.
+
+**En résumé, `api-clarins-lot2-main` est une API de service qui agit comme une couche d'abstraction au-dessus de la base de données GMDATA, exposant des données structurées et sécurisées via des endpoints HTTP. Elle joue un rôle essentiel en fournissant les informations de traçabilité à d'autres applications, notamment celle analysée pour le fichier `GM-tracabilite.txt`.**
+
+**Détail des fichiers et dossiers importants :**
+
+*   **`README.md`**: Contient la documentation de l'API, y compris les instructions d'installation, la configuration des variables d'environnement, et la description détaillée de chaque endpoint.
+*   **`Dockerfile`**: Définit les instructions pour construire une image Docker de l'application.
+*   **`pdm.lock`, `pyproject.toml`**: Fichiers de gestion de projet et de dépendances pour PDM.
+*   **`.env` (attendu)**: Fichier pour les variables d'environnement.
+*   **`src/main.py`**: Cœur de l'application FastAPI.
+*   **`src/DataModels/`**: Contient les modèles de données Pydantic.
+*   **`src/GMDATA/`**: Contient la logique d'accès à la base de données GMDATA.
+    *   `db.py`: Charge les paramètres de connexion.
+    *   `article.py`, `conditionnement.py`, `tracabilite.py`: Fonctions d'accès aux données.
+    *   `world.csv`: Fichier CSV pour la correspondance des codes pays.
+
+**Liste récapitulative des tables PostgreSQL utilisées par l'API (vérifiée à partir du code source et complétée par le `README.md` pour la fonction SQL `get_envois()`) :**
+
+*   `martip00`
+*   `cpalep00`
+*   `cparap00`
+*   `cpapkp00`
+*   `cpkunp00`
+*   `acliep00`
+*   `fcliep00`
+*   `aparap00` (utilisée par la fonction SQL `get_envois()`)
+*   `aeprep00` (utilisée par la fonction SQL `get_envois()`)
+*   `fparap00` (utilisée par la fonction SQL `get_envois()`)
+
+(Note: `world.csv` est un fichier CSV et non une table PostgreSQL, mais il est utilisé conjointement avec les données de la base.)
+
+
+
+
+
+
+
+

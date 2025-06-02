@@ -1,0 +1,104 @@
+#;;"Nom de la Data (minuscule = nom fichier xls de référence ; MAJUSCULE = nom d'une nouvelle donnée)";Valeur exemple ;"Colonne (voir onglet ""scans Traca"")";Data corrigée (si obtenable directement par la Data initiale);Valeur exemple (Data corrigée);"Colonne (voir onglet ""scans Traca"")";Commentaires divers
+1) Données relatives à l'identification du produit;;;;;;;;
+;;;;;;;;
+;"11. Données récupérées ""directement"" de la lecture du QR Code";;;;;;;
+;;;;;;;;
+1;;identifier;110308439278880052;E;ID 10 N;9278880052;F;"1. L'identifiant unique comporte 10 (cas pour l'instant) ou 11 (demain pour certaines références) caractères.
+2. Le champ ""identifier"" a été extrait du QR Code avec une syntaxe de première génération : dans ce cas, l'identifiant ayant seulement 10 caractères il faut sélectionner les 10 caractères à partir de la droite.
+3. Dans le cas d'un QR Code de 2e génération (syntaxe GS1), il faut prendre en compte 2 possibilités : 10 ou 11 caractères. Il suffit de s'appuyer sur les AI de type GS1 et retenir les caractères immédiatement situés après ""/21/"", soit à compter de la 51e position.
+Les syntaxes de QR Code de 1re et 2e génération sont détaillées dans l'onglet n°3 (""Comparatif QR Code"")"
+;;;;;;;;
+2;;code;3666057202476;B;Pas de correction;;;Il s'agit du code EAN (13 Chiffres - 14 à terme) permettant d'identifier la référence produit.
+;;;;;;;;
+;;;;;;;;
+;;;;;;;;
+;12. Données obtenues par exploitation d'éléments contenus dans le QR Code (utilisation d'une table);;;;;;;
+;;;;;;;;
+3;;BATCH NUMBER;;G;;;;"Numérot de lot (7 caractères) : obtenu par exploitation des tables d'appairages constituées en usine. Lors du conditionnement ""identifier"" (soit l'UNI) est rattaché à un numéro de carton (PK), de palette (PA ou absence d'appairage) et de lot. Il faut donc intérroger les données d'appairage pour identifier le numéro de lot correspondant à ""identifier"".
+En cas de problème relative à la collection des données d'appairage pendant le conditionnement ou à la transmission des données depuis les usine, il ne sera pas possible d'établir le lien entre l'identifiant unique et le lot."
+;;;;;;;;
+4;;REF M3;80103084;C;;;;"Référence obtenue par ""traduction"" de ""code"", soit l'EAN. M3 livre la correspondance entre l'EAN, la référence M3 et le nom en clair de la référence."
+;;;;;;;;
+5;;REF CLAIR;DOUBLE SERUM 9 RETAIL 50ML ;D;;;;"Nom en clair de la référence : identifié par exploitation de M3 (même processus que pour la référence ""M3"" sous la forme numérique (8 chiffres)."
+;;;;;;;;
+;;;;;;;;
+2) Données relatives aux circonstances de lecture du QR Code (données indépendantes du produit);;;;;;;;
+;;;;;;;;
+;21. Temporalité du scan (Date et Heure);;;;;;;
+;;;;;;;;
+6;;updatedAt;2024-11-08 15:34:21.277 +0100;Q;;;;Afin de pouvoir comparer différentes saisies de QR Code avec précision et simplicité : Le format souhaité est AAAAMMJJHHMMSS soit 14 chiffres. L'heure doit être en format GMT pour permettre les comparaisons
+;;;;;;;;
+7;;updatedAt (1);2024-11-08 15:34:21.277 +0100;Q;DATE SCAN;45604;;Il s'agit d'extraire la partie date
+;;;;;;;;
+8;;updatedAt (2);2024-11-08 15:34:21.277 +0100;Q;HEURE SCAN (GMT); 15:34:21.277 +0100;;Il s'agit d'extraire la partie heure
+;;;;;;;;
+;22. Localisation du scan (Date et Heure);;;;;;;
+;;;;;;;;
+9;;country;CN;L;;;;Prévoir un dédoublement en 2 colonnes : Nom du Pays complet  (ex : Chine) et code ISO 2 lettres (ex : CN)
+;;;;;;;;
+10;;region;CQ;K;;;;1er niveau de subdivision du pays : Etat (US), Région (FR), Lander (GE), Province, etc…
+;;;;;;;;
+11;;city;Chongqing;J;;;;
+;;;;;;;;
+12;;latitude;29.568900;M;;;;Latitude et longitude en format décimal. L'objectif est un format qui permette l'utilisation d'application de localisation cartographique)
+;;;;;;;;
+13;;longitude;106.557700;N;;;;
+;;;;;;;;
+14;;ADRESSE IP;;;;;;Peut être utile pour exploitation ultérieure (VPN ?)
+;;;;;;;;
+;;;;;;;;
+;23. Données diverses relatives au téléphone utilisé;;;;;;;
+;;;;;;;;
+15;;deviceLanguage;zh;I;;;;Langue du smartphone
+;;;;;;;;
+16;;userAgent;;;;;;Information complète afin de comparer les téléphones et d'identifier des différences.
+;;;;;;;;
+17;;userAgent (1);;;TYPE PHONE;iPhone;;Extraction de la famille de téléphone (
+;;;;;;;;
+18;;userAgent (2);;;OS PHONE; iPhone OS 15_4_1;;
+;;;;;;;;
+;;;;;;;;
+3) Données de traçabilité (identification du client / dernier lieu de scan);;;;;;;;
+;;;;;;;;
+;;;;;;;;
+;31. Date et site de scan;;;;;;;
+;;;;;;;;
+19;;date_envoi;20240720;AE;;;;Date de la lecture du produit
+;;;;;;;;
+20;;type_envoi;envoi_filiale;AA;;;;Permet de faire la différence entre expéditions d'Amiens et expéditions d'un entrepôt filiale.
+;;;;;;;;
+;;;;;SITE SCAN LOG;;;Il s'agit d'identifier l'entrepôt. L'information existe dans les SI. Les informations de scan remontées dans les systèmes permettent d'identifier le site logistique
+;;;;;;;;
+;;;;;;;;
+;32. Unité logistique scannée;;;;;;;
+;;;;;;;;
+21;;emballage;PA;AD;;;;Ces informations permettent de mesurer l'importance de la diversion potentielle. Le numéro d'unité logistique permet d'éliminer les doublons dans le calcul de la diversion potentielle (exemple : Même client/Même facture : 5 produits sur 3 PK différents => on retiendra 3 PK pour calculer la diversion potentielle, en multipliant 3 par la quantité d'unités par PK.
+;;;;;;;;
+22;;code_parallele;9500470313;AB;;;;
+;;;;;;;;
+;33. Identification du client et des données relatives à la commande/facture;;;;;;;
+;;;;;;;;
+23;;nom_envoi;CDFI SHANGHAI;AF;;;;
+;;;;;;;;
+23;;CUSTOMER CODE;;abs;;;;"Il s'agit du référentiel client (Customer Master base : ""Customer Code"") : /!\ Attention à REBOOT. La nomenclature client évolue au fur et à mesure des vagues REBOOT. Il en résulte qu'un même client peut avoir deux numéros (un ancien qui a pu être lu lors du scan et un nouveau)"
+;;;;;;;;
+24;;Customer Code New;;abs;;;;Numéro de client selon le référentiel client à jour. Peut être différent du numéro lors du scan expédition
+;;;;;;;;
+25;;pays_envoi;HONG KONG;AJ;;;;
+;;;;;;;;
+26;;ville_envoi;WANCHAI;AI;;;;
+;;;;;;;;
+27;;NUM COMMANDE;;abs;;;;Ces données sont liées à l'expédition. Les rapports d'achats actuels mentionnent le numéro de facture et la quantité facturée pour la référence.
+;;;;;;;;
+28;;NUM FACTURE;;abs;;;;
+;;;;;;;;
+29;;QUANT FACT;;abs;;;;
+;;;;;;;;
+30;;TYPE CLIENT;;abs;;;;"On distingue les différents clients suivants :
+- filiales CLARINS (FIL)
+- Agents  (AG)
+- Opérateurs TR (TR)"
+;;;;;;;;
+31;;ENTITE RATACHEMENT;APAC;;;;;"L'organisation de CLARINS est divisé en plusieurs ""marchés"" : EUROPE, FGM, MOY ORIENT (pour l'instant relevant du même responsable), APAC, NORD AMERIQUE, TR WW. Cette organisation est variablle. Il faudra s'appuyer sur les données contenues dans l'interface et anticiper des possibles changements d'organisation."
+;;;;;;;;
+32;;REGION GEOGRAPHIQUE;ASIE;;;;;On distingue : EUROPE, APAC, MOYEN ORIENT, AMERIQUE DU NORD, MIAMI (LATAM + TR US). On devra créer une table de concordance permettant de faire le lien (/!\ : le rattachement peut quelques fois s'affranchir de la géographie => exemple Israel est rattaché à l'Europe. Différents pays du Caucase ont des rattachements distincts.

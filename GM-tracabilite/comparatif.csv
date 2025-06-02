@@ -1,0 +1,7 @@
+Bonnes données;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+id;code;REF M3;REF CLAIR;identifier;ID 10 N;BATCH NUMBER;userAgent;deviceLanguage;city;region;country;latitude;longitude;tagId;createdAt;updatedAt;col_17;col_18;Code;Nom :;Ville;Pays :;col_23;col_24;col_25;type_envoi;code_parallele;article;emballage;date_envoi;nom_envoi;addresse_envoi;cp_envoi;ville_envoi;pays_envoi
+43515;3666057202476;80103084;DOUBLE SERUM 9 RETAIL 50ML ;110308439283988170;9283988170;;"Mozilla/5.0 (iPhone; CPU iPhone OS 18_1_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1.1 Mobile/15E148 Safari/604.1";en;Manhattan;IL;US;41.428800;-87.972000;;2025-01-07 14:56:27.053 +0100;2025-01-07 14:56:27.053 +0100;;;;;;;;;;envoi_filiale;4305556422;80103084;PK;20240814;AMAZON.COM;GYR2;85395;GOODYEAR;ETATS-UNIS
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+Données générées;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+id;code;identifier;ID 10 N;userAgent;deviceLanguage;city;region;country;latitude;longitude;tagId;createdAt;updatedAt;BATCH NUMBER;type_envoi;code_parallele;article;emballage;date_envoi;nom_envoi;addresse_envoi;cp_envoi;ville_envoi;pays_envoi;;;;;;;;;;;
+43515;3666057202476;110308439283988170;9283988170;"Mozilla/5.0 (iPhone; CPU iPhone OS 18_1_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.1.1 Mobile/15E148 Safari/604.1";en;Manhattan;IL;US;41.428800;-87.972000;;2025-01-07 14:56:27.053 +0100;2025-01-07 14:56:27.053 +0100;0407025;envoi_filiale;9500470928;80103084;PA;20240720;CDFI SHANGHAI;CHINA DUTY FREE INT'L LIMITED;;WANCHAI;HONG KONG;;;;;;;;;;;
