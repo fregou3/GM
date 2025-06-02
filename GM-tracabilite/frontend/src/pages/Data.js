@@ -352,8 +352,7 @@ const Data = () => {
               {loading ? (
                 <p>Chargement des données...</p>
               ) : (
-                tableData.rows.length > 0 || editMode ? (
-                  <div style={{ 
+                <div style={{ 
                     display: 'flex', 
                     flexDirection: 'column', 
                     position: 'relative',
@@ -361,6 +360,7 @@ const Data = () => {
                     overflow: 'hidden'
                   }}
                 >
+                  {/* Conteneur principal des données */}
                   <div 
                     ref={tableContainerRef}
                     style={{ 
@@ -369,14 +369,16 @@ const Data = () => {
                       overflowY: 'auto'
                     }}
                   >
-                    <table style={{ 
-                      width: 'max-content', 
-                      minWidth: '100%',
-                      borderCollapse: 'collapse', 
-                      border: '1px solid #ddd'
-                    }}>
-                    <thead>
-                      <tr style={{ backgroundColor: '#f2f2f2' }}>
+                    {tableData.rows.length > 0 || editMode ? (
+                      <table style={{ 
+                        width: 'max-content', 
+                        minWidth: '100%',
+                        borderCollapse: 'collapse', 
+                        border: '1px solid #ddd',
+                        tableLayout: 'fixed'
+                      }}>
+                      <thead>
+                        <tr style={{ backgroundColor: '#f2f2f2' }}>
                         {tableData.columns.map(column => (
                           <th 
                             key={column} 
@@ -393,7 +395,7 @@ const Data = () => {
                             {column}
                           </th>
                         ))}
-                        {editMode && <th style={{ padding: '10px', borderBottom: '2px solid #ddd', width: '150px' }}>Actions</th>}
+                        {editMode && <th style={{ padding: '10px', borderBottom: '2px solid #ddd', width: '150px', position: 'sticky', right: 0, backgroundColor: '#f2f2f2', zIndex: 1 }}>Actions</th>}
                       </tr>
                     </thead>
                     <tbody>
@@ -417,7 +419,7 @@ const Data = () => {
                                     />
                                   </td>
                                 ))}
-                                <td style={{ padding: '5px', whiteSpace: 'nowrap' }}>
+                                <td style={{ padding: '5px', whiteSpace: 'nowrap', position: 'sticky', right: 0, backgroundColor: '#f9f9f9', zIndex: 1 }}>
                                   <button 
                                     onClick={() => saveEditedRow(rowIndex)}
                                     style={{ marginRight: '5px', padding: '3px 8px', backgroundColor: '#4CAF50', color: 'white', border: 'none', borderRadius: '3px' }}
@@ -452,7 +454,7 @@ const Data = () => {
                                   </td>
                                 ))}
                                 {editMode && (
-                                  <td style={{ padding: '5px', borderBottom: '1px solid #ddd', whiteSpace: 'nowrap' }}>
+                                  <td style={{ padding: '5px', borderBottom: '1px solid #ddd', whiteSpace: 'nowrap', position: 'sticky', right: 0, backgroundColor: rowIndex % 2 === 0 ? 'white' : '#f9f9f9', zIndex: 1 }}>
                                     <button 
                                       onClick={() => startEditing(rowIndex)}
                                       style={{ marginRight: '5px', padding: '3px 8px', backgroundColor: '#2196F3', color: 'white', border: 'none', borderRadius: '3px' }}
@@ -497,6 +499,11 @@ const Data = () => {
                         )}
                       </tbody>
                     </table>
+                    ) : (
+                      <div style={{ padding: '20px', textAlign: 'center' }}>
+                        <p>Aucune donnée disponible pour cette table.</p>
+                      </div>
+                    )}
                   </div>
                   
                   {/* Barre de défilement horizontale en bas de la fenêtre */}
@@ -516,9 +523,6 @@ const Data = () => {
                     }}></div>
                   </div>
                 </div>
-                ) : (
-                  <p>Aucune donnée disponible pour cette table.</p>
-                )
               )}
             </>
           ) : (
