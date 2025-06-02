@@ -79,10 +79,10 @@ const Home = () => {
     setProcessedJsonData(null);
     
     const formData = new FormData();
-    formData.append('file', selectedFile);
+    formData.append('csvfile', selectedFile);
     
     try {
-      const response = await axios.post('http://localhost:3001/api/upload/csv', formData, {
+      const response = await axios.post('http://localhost:3001/api/upload-csv', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -109,8 +109,8 @@ const Home = () => {
   // Fonction pour vérifier le statut de la tâche
   const checkTaskStatus = async (id) => {
     try {
-      const response = await axios.get(`http://localhost:3001/api/tasks/${id}/status`);
-      const { status, progress, downloadUrl, s3Url } = response.data;
+      const response = await axios.get(`http://localhost:3001/api/task-status/${id}`);
+      const { status, progress, s3Link } = response.data;
       
       setProgress(progress || 0);
       
@@ -119,8 +119,9 @@ const Home = () => {
         setStatus('completed');
         setMessage('Traitement terminé avec succès!');
         setIsTaskActive(false);
-        if (downloadUrl) setDownloadCsvLink(downloadUrl);
-        if (s3Url) setS3Link(s3Url);
+        // Définir l'URL de téléchargement CSV basée sur l'ID de la tâche
+        setDownloadCsvLink(`http://localhost:3001/api/download-csv/${id}`);
+        if (s3Link) setS3Link(s3Link);
       } else if (status === 'failed') {
         setIsLoading(false);
         setStatus('idle');
@@ -174,7 +175,7 @@ const Home = () => {
     setDbUploadStatus({ success: false, message: '', tableName: '' });
     
     const formData = new FormData();
-    formData.append('file', selectedFile);
+    formData.append('csvfile', selectedFile);
     formData.append('replaceExisting', replaceExisting);
     
     try {

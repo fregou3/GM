@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const Papa = require('papaparse');
-const pool = require('../db');
+const { pool } = require('../db');
 const path = require('path');
 const fs = require('fs');
 
